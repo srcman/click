@@ -111,11 +111,15 @@ ToHost::push(int, Packet *p)
     }
 
     m->m_pkthdr.rcvif = &_dev_click; // tell click-ether-input to ignore this
-#if 1
-    /* XXX: ether_input() is now declared static. -bms */
-    (*ifp->if_input)(ifp, m);
+#if __FreeBSD_version >= 900000 && (!defined(HAVE_KERNEL_OPTION_HEADERS) || defined(INVARIANTS))
+    /*
+     * XXX: KASSERT(m->m_pkthdr.rcvif == ifp, ...) in ether_input()
+     *      would always fail in our case, so we just call
+     *      netisr_dispatch() ourselves here.
+     */
+    netisr_dispatch(NETISR_ETHER, m);
 #else
-    ether_input(ifp, eh, m);
+    (*ifp->if_input)(ifp, m);
 #endif
 }
 
