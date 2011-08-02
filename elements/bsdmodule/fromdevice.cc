@@ -390,7 +390,7 @@ FromDevice::cleanup(CleanupStage)
     }
 
     from_device_map.remove(this);
-    if (_promisc && device())
+    if (_promisc && device() && device()->if_pcount > 0)
 	ifpromisc(device(), 0);
 }
 
