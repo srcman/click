@@ -101,7 +101,7 @@ endif
 
 DEFS = @DEFS@ -D_KERNEL
 INCLUDES = -nostdinc -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(srcdir) -I$(top_srcdir) -I. -I$(freebsd_includedir)
+	-I$(srcdir) -I$(top_srcdir) -I. -isystem$(freebsd_includedir)
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 

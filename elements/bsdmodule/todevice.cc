@@ -172,7 +172,7 @@ static String
 ToDevice_read_stats(Element *e, void *thunk)
 {
   ToDevice *td = (ToDevice *)e;
-  int which = reinterpret_cast<int>(thunk);
+  intptr_t which = reinterpret_cast<intptr_t>(thunk);
   switch (which) {
    case 0:
     return String(td->_npackets);
