@@ -535,7 +535,11 @@ RouterThread::run_os()
 	/* do nothing */;
     else if (active()) {	// just schedule others for a moment
 	set_thread_state(S_PAUSED);
+# if __FreeBSD_version >= 900000
+	sys_yield(curthread, NULL);
+# else
 	yield(curthread, NULL);
+# endif
     } else {
 	set_thread_state(S_BLOCKED);
 	_sleep_ident = &_sleep_ident;	// arbitrary address, != NULL
