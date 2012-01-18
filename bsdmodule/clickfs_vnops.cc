@@ -38,7 +38,7 @@ CLICK_USING_DECLS
 
 #define UIO_MX			32
 
-static int clickfs_lookup(struct vop_lookup_args *ap);
+static int clickfs_lookup(struct vop_cachedlookup_args *ap);
 static int clickfs_open(struct vop_open_args *ap);
 static int clickfs_close(struct vop_close_args *ap);
 static int clickfs_access(struct vop_access_args *ap);
@@ -52,7 +52,10 @@ static int clickfs_readlink(struct vop_readlink_args *ap);
 static int clickfs_inactive(struct vop_inactive_args *ap);
 static int clickfs_reclaim(struct vop_reclaim_args *ap);
 
-/* XXX: Blatant kludge as c++ does not like c99 initializers. */
+/*
+ * XXX: Blatant kludge as C++ does not like C99 initializers.
+ *      See vnode_if_newproto.h.
+ */
 struct vop_vector clickfs_vnodeops = {
 	&default_vnodeops,
 	NULL,
@@ -94,10 +97,17 @@ struct vop_vector clickfs_vnodeops = {
 	clickfs_inactive,
 	clickfs_reclaim,
 	NULL, NULL, NULL, NULL,  NULL, NULL, NULL, NULL,
+	NULL, /* lock1, ..., vop_advlockasync */
+#if __FreeBSD_version >= 900000
+	NULL, /* vop_advlockpurge */
+#endif
 	NULL, NULL, NULL, NULL,  NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL,  NULL, NULL, NULL, /* lock1, ..., vptofh */
+	NULL, NULL, NULL, NULL,  NULL, NULL, /* vop_reallocblks, ..., vptofh */
 #if __FreeBSD_version >= 800000
 	NULL, /* vptocnp */
+#endif
+#if __FreeBSD_version >= 900000
+	NULL, /* allocate */
 #endif
 };
 
@@ -130,7 +140,7 @@ clickfs_rootvnode(struct mount *mp, struct vnode **vpp)
 }
 
 static int
-clickfs_lookup(struct vop_lookup_args *ap)
+clickfs_lookup(struct vop_cachedlookup_args *ap)
 {
     struct componentname *cnp = ap->a_cnp;
     struct vnode **vpp = ap->a_vpp;

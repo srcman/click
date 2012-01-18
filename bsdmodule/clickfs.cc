@@ -35,7 +35,11 @@ struct clickfs_mount {
 };
 
 static int
+#if __FreeBSD_version >= 800000
+clickfs_mount(struct mount *mp)
+#else
 clickfs_mount(struct mount *mp, struct thread *td)
+#endif
 {
     size_t count;
     int error;
@@ -72,7 +76,11 @@ clickfs_mount(struct mount *mp, struct thread *td)
 }
 
 static int
+#if __FreeBSD_version >= 800000
+clickfs_unmount(struct mount *mp, int mntflags)
+#else
 clickfs_unmount(struct mount *mp, int mntflags, struct thread *td)
+#endif
 {
     struct clickfs_mount *cmp = (struct clickfs_mount *)mp->mnt_data;
     int error;
@@ -81,7 +89,11 @@ clickfs_unmount(struct mount *mp, int mntflags, struct thread *td)
     if (mntflags & MNT_FORCE)
 	flags |= FORCECLOSE;
 
+#if __FreeBSD_version >= 800000
+    error = vflush(mp, 1, flags, curthread); // there is 1 extra vnode ref.
+#else
     error = vflush(mp, 1, flags, td); // there is 1 extra vnode ref.
+#endif
     if (error)
 	return error;
 
@@ -92,7 +104,11 @@ clickfs_unmount(struct mount *mp, int mntflags, struct thread *td)
 }
 
 static int
+#if __FreeBSD_version >= 800000
+clickfs_root(struct mount *mp, int flags, struct vnode **vpp)
+#else
 clickfs_root(struct mount *mp, int flags, struct vnode **vpp, struct thread *td)
+#endif
 {
     struct clickfs_mount *cmp = (struct clickfs_mount *)mp->mnt_data;
 
@@ -108,14 +124,22 @@ clickfs_root(struct mount *mp, int flags, struct vnode **vpp, struct thread *td)
 }
 
 static int
+#if __FreeBSD_version >= 800000
+clickfs_statfs(struct mount *mp, struct statfs *sbp)
+#else
 clickfs_statfs(struct mount *mp, struct statfs *sbp, struct thread *td)
+#endif
 {
     memcpy(sbp, &mp->mnt_stat, sizeof(*sbp));
     return 0;
 }
 
 static int
+#if __FreeBSD_version >= 800000
+clickfs_sync(struct mount *mp, int waitfor)
+#else
 clickfs_sync(struct mount *mp, int waitfor, struct thread *td)
+#endif
 {
     return 0;
 }

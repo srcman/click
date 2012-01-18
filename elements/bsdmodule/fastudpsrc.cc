@@ -60,8 +60,6 @@ FastUDPSource::configure(Vector<String> &conf, ErrorHandler *errh)
 	.read_p("ACTIVE", _active)
 	.complete() < 0)
 	return -1;
-    if (_sport >= 0x10000 || _dport >= 0x10000)
-	return errh->error("source or destination port too large");
     if (_len < 60) {
 	click_chatter("warning: packet length < 60, defaulting to 60");
 	_len = 60;
