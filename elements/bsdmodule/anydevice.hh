@@ -17,6 +17,11 @@ CLICK_CXX_UNPROTECT
 #ifdef BSD_NETISRSCHED
 # if __FreeBSD_version >= 800000
 #  define NETISR_CLICK 13        // must match empty slots in net/netisr.h !!!
+#  define USE_DISPATCH_TIMER 1 /* XXX */
+#  if USE_DISPATCH_TIMER
+#  else
+void click_schednetisr();
+#  endif
 # else
 #  define NETISR_CLICK 1         // must match empty slots in net/netisr.h !!!
 # endif
@@ -100,7 +105,11 @@ AnyDevice::intr_reschedule(void)
 	_task.reschedule();
     //if (!polling || (polling && *polling != 2))
 # if __FreeBSD_version >= 800000
+#  if USE_DISPATCH_TIMER
         /* XXX: FreeBSD 8 does not have schednetisr() */
+#  else
+	click_schednetisr();
+#  endif
 # else
 	schednetisr(NETISR_CLICK);
 # endif

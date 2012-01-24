@@ -5,8 +5,11 @@ Makefile
 elements.conf
 elements.mk
 elements.cc
+elements.csmk
 machine
 click.ko
 vnode_if.h
 vnode_if_newproto.h
 vnode_if_typedef.h
+device_if.h
+bus_if.h

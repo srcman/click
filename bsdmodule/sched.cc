@@ -35,6 +35,12 @@
 #include <click/cxxprotect.h>
 CLICK_CXX_PROTECT
 #include <sys/param.h>
+# if USE_DISPATCH_TIMER
+# else
+#include <sys/kernel.h>
+#include <sys/bus.h>
+#include <sys/interrupt.h>
+# endif
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/sockio.h>
@@ -77,8 +83,22 @@ static struct netisr_handler click_nh = {
   NETISR_POLICY_SOURCE,
 };
 
-#  define MT_CLICK 13 /* XXX */
+#  if USE_DISPATCH_TIMER
+#   define MT_CLICK 13 /* XXX */
 static struct mbuf *click_timer_mbuf;
+#  else
+struct click_swi {
+    void * click_swi_cookie;
+};
+static struct click_swi click_swi = { NULL };
+
+#   define schednetisr(isr)  swi_sched(click_swi.click_swi_cookie, 0)
+void
+click_schednetisr()
+{
+    schednetisr(CLICK_NETISR);
+}
+#  endif
 # endif
 #else  //BSD_NETISRSCHED
 
@@ -356,11 +376,15 @@ click_timer(void *arg)
 #endif
 #if __FreeBSD_version >= 800000
 # ifdef BSD_NETISRSCHED
+#  if USE_DISPATCH_TIMER
   /*
    * XXX: FreeBSD 8 does not have schednetisr().
    *      Calling netisr_dispatch() here is a hack.
    */
   netisr_dispatch(NETISR_CLICK, click_timer_mbuf);
+#  else
+  schednetisr(NETISR_CLICK);
+#  endif
 # endif
 #else
   schednetisr(NETISR_CLICK);
@@ -375,6 +399,16 @@ click_netisr(struct mbuf* buf)
   RouterThread *rt = click_master->thread(0);
   rt->driver();
 }
+
+#  if USE_DISPATCH_TIMER
+#  else
+static void
+click_intr(void *)
+{
+  RouterThread *rt = click_master->thread(0);
+  rt->driver();
+}
+#  endif
 
 #endif //BSD_NETISRSCHED
 
@@ -393,7 +427,12 @@ click_init_sched(ErrorHandler *errh)
 #ifdef BSD_NETISRSCHED
 # if __FreeBSD_version >= 800000
   netisr_register(&click_nh);
+#  if USE_DISPATCH_TIMER
   click_timer_mbuf = m_get(M_DONTWAIT, MT_CLICK); /* XXX */
+#  else
+  swi_add(NULL, "click", click_intr, NULL, SWI_NET, INTR_MPSAFE, &click_swi.click_swi_cookie);
+  schednetisr(NETISR_CLICK);
+#  endif
 # else
   netisr_register(NETISR_CLICK, click_netisr, NULL, 0);
   schednetisr(NETISR_CLICK);
@@ -464,7 +503,11 @@ click_cleanup_sched()
   callout_drain(&click_timer_h);
 # if __FreeBSD_version >= 800000
   netisr_unregister(&click_nh);
+#  if USE_DISPATCH_TIMER
   m_free(click_timer_mbuf);
+#  else
+  swi_remove(click_swi.click_swi_cookie);
+#  endif
 # else
   netisr_unregister(NETISR_CLICK);
 # endif

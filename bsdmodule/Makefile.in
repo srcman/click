@@ -128,7 +128,8 @@ ifneq ($(MAKECMDGOALS),clean)
 -include elements.mk
 endif
 
-click.ko: Makefile vnode_if.h vnode_if_newproto.h vnode_if_typedef.h $(OBJS)
+click.ko: Makefile vnode_if.h vnode_if_newproto.h vnode_if_typedef.h \
+	  device_if.h bus_if.h $(OBJS)
 	$(LD) -Bshareable -o click.ko $(OBJS)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
@@ -152,6 +153,10 @@ vnode_if_newproto.h: $(freebsd_srcdir)/kern/vnode_if.src
 	/usr/bin/awk -f $(freebsd_srcdir)/tools/vnode_if.awk $(freebsd_srcdir)/kern/vnode_if.src -p
 vnode_if_typedef.h: $(freebsd_srcdir)/kern/vnode_if.src
 	/usr/bin/awk -f $(freebsd_srcdir)/tools/vnode_if.awk $(freebsd_srcdir)/kern/vnode_if.src -q
+device_if.h: $(freebsd_srcdir)/kern/device_if.m
+	/usr/bin/awk -f $(freebsd_srcdir)/tools/makeobjops.awk $(freebsd_srcdir)/kern/device_if.m -h
+bus_if.h: $(freebsd_srcdir)/kern/bus_if.m
+	/usr/bin/awk -f $(freebsd_srcdir)/tools/makeobjops.awk $(freebsd_srcdir)/kern/bus_if.m -h
 
 
 DEPFILES := $(wildcard *.d)
@@ -171,7 +176,7 @@ uninstall:
 
 clean:
 	-rm -f *.d *.o click.ko elements.mk elements.cc elements.conf elements.csmk \
-	vnode_if.h vnode_if_newproto.h vnode_if_typedef.h
+	vnode_if.h vnode_if_newproto.h vnode_if_typedef.h device_if.h bus_if.h
 distclean: clean
 	-rm -f Makefile
 
