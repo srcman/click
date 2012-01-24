@@ -472,18 +472,23 @@ click_cleanup_sched()
   ether_poll_deregister(&click_dummyifnet);
 # endif
   delete placeholder_router;
+  click_master->unuse();
 #else
+  int retval;
   if (kill_router_threads() < 0) {
+    mtx_lock(&click_thread_lock);
     printf("click: Following threads still active, expect a crash:\n");
     for (int i = 0; i < click_thread_pids->size(); i++)
       printf("click:   router thread pid %d\n", (*click_thread_pids)[i]);
-    return -1;
+    mtx_unlock(&click_thread_lock);
+    retval = -1;
   } else {
     delete click_thread_pids;
     click_thread_pids = 0;
-    return 0;
+    retval = 0;
   }
   mtx_destroy(&click_thread_lock);
+  return retval;
 #endif
-   return 0;
+  return 0;
 }
