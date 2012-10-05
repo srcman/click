@@ -317,7 +317,7 @@ AC_DEFUN([CLICK_CHECK_LIBPCAP], [
 
     dnl header files
 
-    HAVE_PCAP=yes
+    HAVE_PCAP=
     if test "${PCAP_INCLUDES-NO}" = NO; then
 	AC_CACHE_CHECK(for pcap.h, ac_cv_pcap_header_path, [
 	    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[#include <pcap.h>]])],
