@@ -758,6 +758,8 @@ Packet::steal_m()
   struct mbuf *m2;
 
   p = uniqueify();
+  if (!p)
+    return NULL;
   m2 = p->m();
 
   /* Clear the mbuf from the packet: otherwise kill will MFREE it */

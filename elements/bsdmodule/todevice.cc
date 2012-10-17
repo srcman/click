@@ -142,6 +142,9 @@ ToDevice::run_task(Task *)
 	    break;
 	_npackets++;
 	struct mbuf *m = p->steal_m();
+	if (!m) {
+	    break;
+	}
 	if (ether_output_frame(device(), m) != 0)
 	    break;
 	sent++;
