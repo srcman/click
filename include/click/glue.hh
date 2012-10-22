@@ -285,6 +285,8 @@ extern unsigned char _ctype[];
 extern "C" void *memmove(void *dest, const void *src, size_t len);
 # endif
 
+extern "C" void *memchr(const void *s, int c, size_t n);
+
 
 typedef struct ifnet net_device;
 
